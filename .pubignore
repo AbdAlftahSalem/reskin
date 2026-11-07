@@ -1,0 +1,6 @@
+docs/
+mcp/
+example/build/
+example/.dart_tool/
+.dart_tool/
+build/

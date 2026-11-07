@@ -1,0 +1,27 @@
+{
+  "name": "reskin-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for reskin: X-ray hardcoded Flutter colors (static scan of lib/), apply themes to a running app, export app_theme.dart.",
+  "type": "module",
+  "bin": { "reskin-mcp": "dist/src/index.js" },
+  "main": "dist/src/index.js",
+  "files": ["dist/src", "README.md"],
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "tsc -p . && node --test \"dist/test/*.test.js\"",
+    "start": "node dist/src/index.js"
+  },
+  "engines": { "node": ">=22" },
+  "license": "MIT",
+  "author": "Abd Alftah Salem",
+  "repository": { "type": "git", "url": "git+https://github.com/AbdAlftahSalem/reskin.git", "directory": "mcp" },
+  "keywords": ["mcp", "flutter", "theme", "dark-mode", "material3"],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
