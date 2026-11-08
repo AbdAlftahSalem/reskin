@@ -8,14 +8,10 @@ theme is outlined in red with its `file:line`. Those are the colors that break d
 Then let an AI agent fix them through `reskin-mcp`, and export a clean `app_theme.dart`.
 
 <p align="center">
-  <a href="docs/media/reskin_showcase.mp4"><img src="docs/media/reskin_preview.gif" width="320" alt="reskin on the Bunn coffee app: X-ray finds 7 hardcoded colors, reskin-mcp fix replaces them, hot reload shows 0 left"></a>
+  <a href="docs/media/reskin_showcase.mp4"><img src="docs/media/reskin_preview.gif" width="320" alt="reskin on the Bunn coffee app: an AI theme from a prompt, X-ray on hardcoded colors, then reskin-mcp fix"></a>
   <br>
   <a href="docs/media/reskin_showcase.mp4"><b>▶ Watch the full demo (74s)</b></a>
 </p>
-
-| AI theme from a prompt | X-ray: hardcoded colors | Dark mode, order screen |
-|---|---|---|
-| ![](docs/media/showcase_1_ai_theme.jpg) | ![](docs/media/showcase_2_xray.jpg) | ![](docs/media/showcase_3_dark_order.jpg) |
 
 | Restyle from a prompt | X-ray in dark mode | After the fix | Export |
 |---|---|---|---|
