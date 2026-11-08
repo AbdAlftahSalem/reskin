@@ -29,6 +29,7 @@ import 'xray.dart';
 abstract final class Reskin {
   static TransitionBuilder builder({
     ReskinController? controller,
+    ReskinThemeProvider? provider,
     ThemeData? theme,
     ThemeData? darkTheme,
     bool enabled = kDebugMode,
@@ -44,6 +45,7 @@ abstract final class Reskin {
       if (!enabled) return inner;
       return ReskinHost(
         controller: controller,
+        provider: provider,
         theme: theme,
         darkTheme: darkTheme,
         fontResolver: fontResolver,
@@ -74,6 +76,7 @@ class ReskinHost extends StatefulWidget {
     super.key,
     required this.child,
     this.controller,
+    this.provider,
     this.theme,
     this.darkTheme,
     this.fontResolver,
@@ -85,6 +88,11 @@ class ReskinHost extends StatefulWidget {
 
   final Widget child;
   final ReskinController? controller;
+
+  /// Provider for the controller this host creates when [controller] is
+  /// null. Defaults to [ReskinProviders.fromEnvironment]: Gemini or OpenAI
+  /// when a key was passed with `--dart-define`, else offline.
+  final ReskinThemeProvider? provider;
 
   /// Your original light/dark themes, used when "Original" is selected and
   /// the Light/Dark toggle is forced. Defaults to the ambient theme.
@@ -124,7 +132,9 @@ class ReskinHostState extends State<ReskinHost> {
   void initState() {
     super.initState();
     _ownsController = widget.controller == null;
-    _controller = widget.controller ?? ReskinController();
+    _controller = widget.controller ??
+        ReskinController(
+            provider: widget.provider ?? ReskinProviders.fromEnvironment());
     if (widget.initiallyOpen) _controller.setPanelOpen(true);
     _controller.addListener(_onChange);
     _panelEntry = OverlayEntry(
@@ -395,6 +405,9 @@ class ReskinHostState extends State<ReskinHost> {
       return ok(<String, Object?>{
         'applied': h._controller.index,
         'provider': h._controller.provider.name,
+        'source': h._controller.source,
+        if (h._controller.usedFallback)
+          'fallbackReason': h._controller.fallbackReason,
         'variants': v.map((t) => t.toJson()).toList(),
       });
     });
@@ -784,9 +797,7 @@ class _PanelState extends State<_Panel> {
                       style:
                           TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                   const SizedBox(width: 8),
-                  Text(c.provider.name,
-                      style:
-                          TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
+                  ReskinSourceBadge(controller: c),
                   const Spacer(),
                   IconButton(
                     key: const Key('reskin-close'),
@@ -935,10 +946,34 @@ class _PanelState extends State<_Panel> {
                   ),
                 ],
               ),
-              if (c.error != null)
+              if (c.busy)
+                Padding(
+                  key: const Key('reskin-loading'),
+                  padding: const EdgeInsets.only(top: 8, right: 4),
+                  child: Row(children: <Widget>[
+                    const Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(2)),
+                        child: LinearProgressIndicator(
+                            minHeight: 3, color: Color(0xFFB39DFF)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                        c.aiEnabled
+                            ? 'Asking ${c.provider.name}…'
+                            : 'Generating…',
+                        style: TextStyle(
+                            fontSize: 11, color: cs.onSurfaceVariant)),
+                  ]),
+                ),
+              if (c.usedFallback && !c.busy)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: Text('Provider failed, used offline: ${c.error}',
+                  child: Text(
+                      '${c.provider.name} failed: ${c.fallbackReason}. '
+                      'Showing offline themes.',
+                      key: const Key('reskin-fallback-note'),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 11, color: cs.error)),
@@ -948,6 +983,59 @@ class _PanelState extends State<_Panel> {
         ),
       ),
     );
+  }
+}
+
+/// The pill next to the panel title: which provider made the shown themes.
+/// AI results show the provider's name; a fallback shows an amber
+/// "offline" badge whose tooltip says why the AI call failed.
+class ReskinSourceBadge extends StatelessWidget {
+  const ReskinSourceBadge({super.key, required this.controller});
+
+  final ReskinController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = controller;
+    final fell = c.usedFallback;
+    final label = c.busy && c.aiEnabled
+        ? '${c.provider.name}…'
+        : fell
+            ? 'offline'
+            : (c.source ?? c.provider.name);
+    final ai = !fell && label != 'offline' && c.aiEnabled;
+    final color = fell
+        ? const Color(0xFFFFB74D)
+        : ai
+            ? const Color(0xFFB39DFF)
+            : const Color(0xFF9E9AA8);
+    final pill = Container(
+      key: const Key('reskin-source-badge'),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.55)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+        Icon(
+            fell
+                ? Icons.cloud_off
+                : ai
+                    ? Icons.auto_awesome
+                    : Icons.offline_bolt_outlined,
+            size: 11,
+            color: color),
+        const SizedBox(width: 3),
+        Text(label,
+            style: TextStyle(
+                fontSize: 10.5, fontWeight: FontWeight.w700, color: color)),
+      ]),
+    );
+    return fell
+        ? Tooltip(
+            message: '${c.provider.name}: ${c.fallbackReason}', child: pill)
+        : pill;
   }
 }
 

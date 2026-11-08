@@ -132,3 +132,34 @@ Map<String, Color> _schemeMap(ColorScheme s) => <String, Color>{
       'onSurfaceVariant': s.onSurfaceVariant,
       'surfaceContainerHighest': s.surfaceContainerHighest,
     };
+
+/// WCAG AA non-text contrast (3:1) for colors used as text or icons directly
+/// on the page: `primary` and `secondary` against `surface` (text buttons,
+/// links, selected icons). A failing color keeps its hue and is darkened on
+/// light pages or lightened on dark ones until it passes. Returns the scheme
+/// and how many roles were changed. [ensureReadable] still fixes the `on*`
+/// colors afterwards.
+(ColorScheme, int) ensureAccentsVisible(ColorScheme scheme,
+    {double minRatio = 3}) {
+  final bg = scheme.surface;
+  final lightPage =
+      contrastRatio(Colors.black, bg) >= contrastRatio(Colors.white, bg);
+  var changed = 0;
+  Color fix(Color c) {
+    if (contrastRatio(c, bg) >= minRatio) return c;
+    changed++;
+    var hsl = HSLColor.fromColor(c);
+    for (var i = 0; i < 60; i++) {
+      final l = (hsl.lightness + (lightPage ? -0.015 : 0.015)).clamp(0.0, 1.0);
+      hsl = hsl.withLightness(l);
+      if (contrastRatio(hsl.toColor(), bg) >= minRatio || l == 0 || l == 1) {
+        break;
+      }
+    }
+    return hsl.toColor();
+  }
+
+  final out = scheme.copyWith(
+      primary: fix(scheme.primary), secondary: fix(scheme.secondary));
+  return (out, changed);
+}

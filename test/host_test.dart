@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:reskin/reskin.dart';
 
 Color? _seenPrimary;
@@ -113,5 +117,54 @@ void main() {
     await tester.tap(find.byKey(const Key('reskin-export-close')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('reskin-export-view')), findsNothing);
+  });
+
+  testWidgets('panel shows an "offline" badge when the AI call fails',
+      (tester) async {
+    final c = ReskinController(
+        provider: GeminiThemeProvider(
+            apiKey: 'bad',
+            client: MockClient((_) async => http.Response('denied', 401))));
+    await tester.pumpWidget(_app(c));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('reskin-pill')));
+    await tester.pumpAndSettle();
+    final badge = find.byKey(const Key('reskin-source-badge'));
+    expect(find.descendant(of: badge, matching: find.text('gemini')), findsOne);
+
+    await tester.enterText(
+        find.byKey(const Key('reskin-prompt')), 'ذهبي على كحلي');
+    await tester.tap(find.byKey(const Key('reskin-generate')));
+    await tester.pumpAndSettle();
+
+    expect(c.usedFallback, isTrue);
+    expect(c.variants, hasLength(4));
+    expect(find.byKey(const Key('reskin-loading')), findsNothing);
+    expect(
+        find.descendant(of: badge, matching: find.text('offline')), findsOne);
+    expect(find.byKey(const Key('reskin-fallback-note')), findsOne);
+    expect(find.textContaining('API key rejected (401)'), findsOne);
+  });
+
+  testWidgets('panel shows a loading line while the AI answers',
+      (tester) async {
+    final gate = Completer<http.Response>();
+    final c = ReskinController(
+        provider: GeminiThemeProvider(
+            apiKey: 'k', client: MockClient((_) => gate.future)));
+    await tester.pumpWidget(_app(c));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('reskin-pill')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('reskin-prompt')), 'ocean');
+    await tester.tap(find.byKey(const Key('reskin-generate')));
+    await tester.pump();
+    expect(find.byKey(const Key('reskin-loading')), findsOne);
+    expect(find.text('Asking gemini…'), findsOne);
+    gate.complete(http.Response('nope', 500));
+    await tester.pump(const Duration(seconds: 2)); // the one retry
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('reskin-loading')), findsNothing);
+    expect(c.usedFallback, isTrue);
   });
 }

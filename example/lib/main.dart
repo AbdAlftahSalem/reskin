@@ -19,6 +19,16 @@ final ThemeData darkTheme = ThemeData(
   fontFamily: 'Inter',
 );
 
+/// Font families in pubspec.yaml (assets/fonts).
+const List<String> bundledFonts = <String>[
+  'Inter',
+  'Manrope',
+  'Cormorant Garamond',
+  'El Messiri',
+  'JetBrains Mono',
+  'DejaVu Serif',
+];
+
 void main() => runApp(const BazaarApp());
 
 class BazaarApp extends StatelessWidget {
@@ -36,6 +46,11 @@ class BazaarApp extends StatelessWidget {
       builder: Reskin.builder(
         theme: lightTheme,
         darkTheme: darkTheme,
+        // AI first: Gemini (or OpenAI) when you run with
+        //   --dart-define=RESKIN_GEMINI_KEY=your-own-key
+        // and the offline generator otherwise or when the call fails.
+        // The model may only pick the fonts this app bundles.
+        provider: ReskinProviders.fromEnvironment(fonts: bundledFonts),
         onExport: (code) => debugPrint('reskin export: ${code.length} chars'),
       ),
       home: const ShellPage(),

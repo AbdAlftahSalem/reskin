@@ -171,7 +171,151 @@ const Map<String, Color> kColorWords = <String, Color>{
   'grey': Color(0xFF616161),
   'gray': Color(0xFF616161),
   'silver': Color(0xFF9E9E9E),
+  'charcoal': Color(0xFF36454F),
+  'graphite': Color(0xFF3A3A40),
+  'onyx': Color(0xFF1F1F23),
+  'ink': Color(0xFF1C2541),
+  'steel': Color(0xFF4682B4),
+  'ivory': Color(0xFFFFF8E7),
+  'pearl': Color(0xFFEAE0C8),
+  'snow': Color(0xFFFAFAFA),
+  'espresso': Color(0xFF4B3621),
+  'latte': Color(0xFFC5A880),
+  'caramel': Color(0xFFC68E17),
+  'chocolate': Color(0xFF5D3A1A),
+  'honey': Color(0xFFE0A526),
+  'terracotta': Color(0xFFC8553D),
+  'rust': Color(0xFFB7410E),
+  'copper': Color(0xFFB87333),
+  'bronze': Color(0xFFA97142),
+  'mustard': Color(0xFFD4A017),
+  'saffron': Color(0xFFF4C430),
+  'lemon': Color(0xFFF7E04B),
+  'tangerine': Color(0xFFF28500),
+  'apricot': Color(0xFFF5B38A),
+  'salmon': Color(0xFFFA8072),
+  'scarlet': Color(0xFFD62828),
+  'ruby': Color(0xFF9B111E),
+  'cherry': Color(0xFFC2185B),
+  'wine': Color(0xFF722F37),
+  'blush': Color(0xFFDE5D83),
+  'fuchsia': Color(0xFFC026D3),
+  'plum': Color(0xFF6E2C6E),
+  'mauve': Color(0xFF9F7AA0),
+  'lilac': Color(0xFFB39DDB),
+  'sage': Color(0xFF8A9A5B),
+  'pistachio': Color(0xFF93C572),
+  'jade': Color(0xFF00A86B),
+  'seafoam': Color(0xFF71C9A9),
+  'aqua': Color(0xFF00B4D8),
+  'cobalt': Color(0xFF0047AB),
+  'sapphire': Color(0xFF0F52BA),
+  'royal': Color(0xFF2752C9),
+  'azure': Color(0xFF1E88E5),
+  'denim': Color(0xFF1560BD),
+  'petrol': Color(0xFF005F6A),
+  'khaki': Color(0xFFBDB76B),
+  'taupe': Color(0xFF8B7D6B),
 };
+
+/// Arabic words the offline provider understands, after
+/// [normalizeArabic] (no hamza seats, ة → ه, ى → ي, no diacritics), mapped
+/// to an English key of [kColorWords] or a mood. Prefixes like ال / و / بـ
+/// and feminine endings (ذهبية → ذهبي) are stripped before lookup.
+const Map<String, String> kArabicWords = <String, String>{
+  // colors
+  'ذهبي': 'gold', 'ذهب': 'gold',
+  'كحلي': 'navy', 'نيلي': 'indigo',
+  'ازرق': 'blue', 'زرقاء': 'blue', 'زرقا': 'blue',
+  'سماوي': 'sky',
+  'اخضر': 'green', 'خضراء': 'green', 'خضرا': 'green',
+  'زيتي': 'olive', 'زيتوني': 'olive',
+  'زمردي': 'emerald', 'نعناعي': 'mint', 'فستقي': 'pistachio',
+  'فيروزي': 'turquoise', 'تركوازي': 'turquoise', 'تركواز': 'turquoise',
+  'احمر': 'red', 'حمراء': 'red', 'حمرا': 'red',
+  'خمري': 'burgundy', 'عنابي': 'maroon', 'نبيتي': 'wine',
+  'مرجاني': 'coral', 'ياقوتي': 'ruby',
+  'وردي': 'pink', 'زهري': 'pink', 'فوشي': 'fuchsia',
+  'بنفسجي': 'purple', 'ارجواني': 'purple', 'موف': 'mauve', 'ليلكي': 'lilac',
+  'برتقالي': 'orange', 'مشمشي': 'apricot',
+  'اصفر': 'yellow', 'صفراء': 'yellow', 'صفرا': 'yellow',
+  'ليموني': 'lemon', 'خردلي': 'mustard', 'عسلي': 'honey',
+  'بني': 'brown', 'قهوي': 'coffee', 'كراميل': 'caramel',
+  'شوكولا': 'chocolate', 'شوكولاته': 'chocolate',
+  'بيج': 'beige', 'كريمي': 'cream', 'رملي': 'sand', 'ترابي': 'terracotta',
+  'نحاسي': 'copper', 'برونزي': 'bronze',
+  'ابيض': 'white', 'بيضاء': 'white', 'بيضا': 'white', 'عاجي': 'ivory',
+  'اسود': 'black', 'سوداء': 'black', 'سودا': 'black', 'فحمي': 'charcoal',
+  'رمادي': 'grey', 'رصاصي': 'grey', 'فضي': 'silver',
+  // moods
+  'رمضان': 'ramadan', 'رمضاني': 'ramadan', 'عيد': 'eid',
+  'فخم': 'luxury', 'فاخر': 'luxury', 'فخامه': 'luxury',
+  'انيق': 'elegant', 'اناقه': 'elegant',
+  'بحر': 'ocean', 'بحري': 'ocean', 'محيط': 'ocean', 'شاطئ': 'beach',
+  'غابه': 'forest', 'طبيعه': 'nature', 'غروب': 'sunset',
+  'قهوه': 'coffee', 'مقهي': 'cafe', 'كافيه': 'cafe',
+  'بسيط': 'minimal', 'هادي': 'calm', 'هادئ': 'calm', 'هدوء': 'calm',
+  'اطفال': 'kids', 'تقني': 'tech', 'تكنولوجيا': 'tech',
+  'نيون': 'neon', 'سايبر': 'cyber', 'العاب': 'gaming',
+  'بنك': 'bank', 'صحه': 'health', 'صحي': 'health',
+  'طبي': 'medical', 'مستشفي': 'medical', 'عياده': 'medical',
+  'طعام': 'food', 'اكل': 'food', 'مطعم': 'restaurant',
+  'صحراء': 'desert', 'صحرا': 'desert', 'ربيع': 'spring',
+  'كلاسيكي': 'vintage', 'قديم': 'vintage',
+  'ليل': 'night', 'ليلي': 'night', 'ليالي': 'night',
+  'صبح': 'morning', 'صباح': 'morning', 'فجر': 'dawn',
+  'خريف': 'autumn', 'شتاء': 'winter', 'شتا': 'winter', 'صيف': 'summer',
+  'دافي': 'warm', 'دافئ': 'warm',
+  'طلاب': 'education', 'طالب': 'education', 'دراسه': 'education',
+  'تعليم': 'education', 'مدرسه': 'education', 'جامعه': 'education',
+  'رياضه': 'sport', 'سفر': 'travel', 'عرس': 'wedding', 'زفاف': 'wedding',
+};
+
+/// Removes Arabic diacritics and tatweel and unifies letter forms
+/// (أ إ آ ٱ → ا, ة → ه, ى → ي) so spelling variants match.
+String normalizeArabic(String w) => w
+    .replaceAll(RegExp('[\u064B-\u065F\u0670\u0640]'), '')
+    .replaceAll(RegExp('[أإآٱ]'), 'ا')
+    .replaceAll('ة', 'ه')
+    .replaceAll('ى', 'ي');
+
+const List<String> _arPrefixes = <String>[
+  'وبال',
+  'وال',
+  'بال',
+  'فال',
+  'كال',
+  'لل',
+  'ال',
+  'و',
+  'ب',
+  'ل',
+  'ف'
+];
+
+/// The English key ([kColorWords] or a mood) for an Arabic [word], or null.
+String? arabicKey(String word) {
+  final n = normalizeArabic(word);
+  final stems = <String>[n];
+  for (final p in _arPrefixes) {
+    if (n.startsWith(p) && n.length - p.length >= 2) {
+      stems.add(n.substring(p.length));
+    }
+  }
+  for (final s in stems) {
+    final forms = <String>[
+      s,
+      if (s.endsWith('يه')) '${s.substring(0, s.length - 2)}ي',
+      if (s.endsWith('يات')) '${s.substring(0, s.length - 3)}ي',
+      if (s.endsWith('ه') && s.length > 3) s.substring(0, s.length - 1),
+    ];
+    for (final f in forms) {
+      final k = kArabicWords[f];
+      if (k != null) return k;
+    }
+  }
+  return null;
+}
 
 @immutable
 class _Mood {
@@ -255,14 +399,71 @@ const Map<String, _Mood> _moods = <String, _Mood>{
   'vintage': _Mood(Color(0xFF8D6E63),
       accent: Color(0xFFD7CCC8), heading: 'DejaVu Serif', radius: 8),
   'night': _Mood(Color(0xFF283593), background: Color(0xFF14213D), radius: 16),
+  'calm': _Mood(Color(0xFF4F7C8A),
+      accent: Color(0xFF9CC5B9), heading: 'Manrope', radius: 18),
+  'serene': _Mood(Color(0xFF5B8A9A), accent: Color(0xFFB7D3C6), radius: 18),
+  'morning': _Mood(Color(0xFFE08E45), accent: Color(0xFFF6D8AE), radius: 18),
+  'sunrise': _Mood(Color(0xFFF08A4B), accent: Color(0xFFFFD166), radius: 18),
+  'dawn': _Mood(Color(0xFFD9822B), accent: Color(0xFFB8A1D9), radius: 18),
+  'autumn': _Mood(Color(0xFFB5541C),
+      accent: Color(0xFFD4A017), heading: 'DejaVu Serif', radius: 12),
+  'fall': _Mood(Color(0xFFB5541C), accent: Color(0xFFD4A017), radius: 12),
+  'winter': _Mood(Color(0xFF3D6A8A), accent: Color(0xFFB3D4E6), radius: 14),
+  'summer': _Mood(Color(0xFFFF8C42), accent: Color(0xFF00B4D8), radius: 22),
+  'cozy': _Mood(Color(0xFF8C5A3C),
+      accent: Color(0xFFE6B89C), heading: 'DejaVu Serif', radius: 18),
+  'warm': _Mood(Color(0xFFC0632B), accent: Color(0xFFF2C14E), radius: 16),
+  'cool': _Mood(Color(0xFF2F6F9F), accent: Color(0xFF7FD1C7), radius: 14),
+  'education': _Mood(Color(0xFF3559B5),
+      accent: Color(0xFFF2A541), heading: 'Manrope', radius: 14),
+  'student': _Mood(Color(0xFF3559B5), accent: Color(0xFFF2A541), radius: 14),
+  'students': _Mood(Color(0xFF3559B5), accent: Color(0xFFF2A541), radius: 14),
+  'study': _Mood(Color(0xFF3559B5), accent: Color(0xFFF2A541), radius: 14),
+  'school': _Mood(Color(0xFF3559B5), accent: Color(0xFFF2A541), radius: 16),
+  'university': _Mood(Color(0xFF26408B), accent: Color(0xFFC9A227), radius: 10),
+  'cyberpunk': _Mood(Color(0xFFFF2A6D),
+      accent: Color(0xFF05D9E8),
+      background: Color(0xFF0D0221),
+      heading: 'JetBrains Mono',
+      radius: 4),
+  'futuristic': _Mood(Color(0xFF00B8D4),
+      background: Color(0xFF0A0F1C), heading: 'JetBrains Mono', radius: 6),
+  'space': _Mood(Color(0xFF5C6BC0),
+      accent: Color(0xFFB388FF), background: Color(0xFF0B0D21), radius: 14),
+  'galaxy': _Mood(Color(0xFF7E57C2),
+      accent: Color(0xFFF48FB1), background: Color(0xFF120D2B), radius: 16),
+  'wedding': _Mood(Color(0xFFB08968),
+      accent: Color(0xFFE8C4C4), heading: 'Cormorant Garamond', radius: 14),
+  'romantic': _Mood(Color(0xFFC2185B),
+      accent: Color(0xFFF8BBD0), heading: 'Cormorant Garamond', radius: 18),
+  'love': _Mood(Color(0xFFD81B60), accent: Color(0xFFF8BBD0), radius: 20),
+  'sport': _Mood(Color(0xFFE53935),
+      accent: Color(0xFF212121), heading: 'Manrope', radius: 8),
+  'fitness': _Mood(Color(0xFFFF5722),
+      accent: Color(0xFF263238), heading: 'Manrope', radius: 10),
+  'travel': _Mood(Color(0xFF0288D1),
+      accent: Color(0xFFFFB74D), heading: 'Manrope', radius: 18),
 };
 
 /// Parses a free-text prompt. Understands color words, mood words, and the
 /// pattern "X on Y" (X = accent, Y = background/brand), in any order.
 PromptIntent parsePrompt(String text) {
   final lower = text.toLowerCase();
-  final words =
-      RegExp(r'[a-z]+').allMatches(lower).map((m) => m.group(0)!).toList();
+  // Surface words as typed, and the English key each one stands for
+  // (Arabic words are mapped through [kArabicWords]).
+  final surface = RegExp(r'[a-z]+|[\u0621-\u065F\u0670-\u06D3]+')
+      .allMatches(lower)
+      .map((m) => m.group(0)!)
+      .toList();
+  final words = <String>[
+    for (final w in surface)
+      RegExp(r'^[a-z]+$').hasMatch(w)
+          ? w
+          : (arabicKey(w) ??
+              (const <String>{'علي', 'ع', 'فوق'}.contains(normalizeArabic(w))
+                  ? 'on'
+                  : w)),
+  ];
   final matched = <String>[];
   Color? seed;
   Color? accent;
@@ -271,10 +472,10 @@ PromptIntent parsePrompt(String text) {
   String? body;
   double? radius;
 
-  for (final w in words) {
-    final mood = _moods[w];
+  for (var i = 0; i < words.length; i++) {
+    final mood = _moods[words[i]];
     if (mood != null) {
-      matched.add(w);
+      matched.add(surface[i]);
       seed ??= mood.seed;
       accent ??= mood.accent;
       background ??= mood.background;
@@ -284,22 +485,32 @@ PromptIntent parsePrompt(String text) {
     }
   }
 
-  // "gold on navy" → accent gold, background + seed navy.
-  final on = RegExp(r'([a-z]+)\s+on\s+([a-z]+)').firstMatch(lower);
-  if (on != null &&
-      kColorWords.containsKey(on.group(1)) &&
-      kColorWords.containsKey(on.group(2))) {
-    accent = kColorWords[on.group(1)];
-    background = kColorWords[on.group(2)];
+  // "gold on navy" / «ذهبي على كحلي» → accent gold, background + seed navy.
+  int? on;
+  for (var i = 0; i + 2 < words.length; i++) {
+    if (words[i + 1] == 'on' &&
+        kColorWords.containsKey(words[i]) &&
+        kColorWords.containsKey(words[i + 2])) {
+      on = i;
+      break;
+    }
+  }
+  final onLabel = on == null
+      ? null
+      : '${surface[on]} ${surface[on + 1]} ${surface[on + 2]}';
+  if (on != null) {
+    accent = kColorWords[words[on]];
+    background = kColorWords[words[on + 2]];
     seed = background;
-    matched.add('${on.group(1)} on ${on.group(2)}');
+    matched.add(onLabel!);
   } else {
-    final colors = <Color>[
-      for (final w in words)
-        if (kColorWords.containsKey(w)) kColorWords[w]!,
-    ];
-    for (final w in words) {
-      if (kColorWords.containsKey(w)) matched.add(w);
+    final colors = <Color>[];
+    for (var i = 0; i < words.length; i++) {
+      final c = kColorWords[words[i]];
+      if (c != null) {
+        colors.add(c);
+        if (!matched.contains(surface[i])) matched.add(surface[i]);
+      }
     }
     if (colors.isNotEmpty) {
       seed = colors.first;
@@ -317,14 +528,15 @@ PromptIntent parsePrompt(String text) {
   if (lower.contains('serif')) heading = 'Cormorant Garamond';
   if (lower.contains('mono')) heading = 'JetBrains Mono';
 
+  final isArabicOn = on != null && !RegExp(r'^[a-z]+$').hasMatch(surface[on]);
   return PromptIntent(
     seed: seed,
     accent: accent,
     background: background,
-    title: on != null &&
-            matched.contains('${on.group(1)} on ${on.group(2)}') &&
-            words.length <= 3
-        ? '${_cap(on.group(1)!)} on ${_cap(on.group(2)!)}'
+    title: on != null && surface.length <= 3
+        ? (isArabicOn
+            ? onLabel!
+            : '${_cap(surface[on])} on ${_cap(surface[on + 2])}')
         : _title(text),
     headingFont: heading,
     bodyFont: body,
@@ -346,7 +558,7 @@ int _stableHash(String s) {
 
 String _title(String text) {
   final words = text
-      .replaceAll(RegExp(r'[^A-Za-z0-9 ]'), ' ')
+      .replaceAll(RegExp(r'[^A-Za-z0-9\u0621-\u065F\u0670-\u06D3 ]'), ' ')
       .split(' ')
       .where((w) => w.isNotEmpty)
       .take(2)

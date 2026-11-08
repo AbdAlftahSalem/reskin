@@ -57,14 +57,15 @@ void main() {
     final p = GeminiThemeProvider(apiKey: 'k-123', client: client);
     final v = await p.generate(const ReskinPrompt.text('ramadan', count: 2));
     expect(seen.headers['x-goog-api-key'], 'k-123');
-    expect(seen.url.path, contains('gemini-2.5-flash:generateContent'));
+    expect(seen.url.path, contains('gemini-flash-lite-latest:generateContent'));
     final body = jsonDecode(seen.body) as Map<String, dynamic>;
     expect(jsonEncode(body['contents']), contains('ramadan'));
     expect(v.first.source, 'gemini');
     expect(v, hasLength(2));
   });
 
-  test('OpenAI provider uses bearer auth and JSON mode', () async {
+  test('OpenAI provider uses bearer auth and strict structured outputs',
+      () async {
     late http.Request seen;
     final client = MockClient((req) async {
       seen = req;
@@ -81,6 +82,13 @@ void main() {
     final p = OpenAIThemeProvider(apiKey: 'sk-test', client: client);
     final v = await p.generate(const ReskinPrompt.seed(Color(0xFF00897B)));
     expect(seen.headers['authorization'], 'Bearer sk-test');
+    final format = (jsonDecode(seen.body)
+        as Map<String, dynamic>)['response_format'] as Map<String, dynamic>;
+    expect(format['type'], 'json_schema');
+    expect((format['json_schema'] as Map<String, dynamic>)['strict'], isTrue);
+    final jsonMode = OpenAIThemeProvider(
+        apiKey: 'sk-test', client: client, structuredOutputs: false);
+    await jsonMode.generate(const ReskinPrompt.text('ocean'));
     expect((jsonDecode(seen.body) as Map<String, dynamic>)['response_format'],
         <String, String>{'type': 'json_object'});
     expect(v.first.source, 'openai');

@@ -15,6 +15,12 @@ Then let an AI agent fix them through `reskin-mcp`, and export a clean `app_them
 > Debug-only dev tool. In release/profile builds `Reskin.builder()` returns your app
 > untouched.
 
+**AI themes on the example app** (real Gemini answers, see [docs/LOG.md](docs/LOG.md)):
+
+| «Ramadan night, gold on navy» (dark) | «ألوان قهوة الصبح» | «cyberpunk neon» |
+|---|---|---|
+| ![](docs/images/ai_ramadan_dark.jpg) | ![](docs/images/ai_arabic_coffee.jpg) | ![](docs/images/ai_cyberpunk.jpg) |
+
 ## Quick start
 
 ```yaml
@@ -44,30 +50,99 @@ Run in debug. Tap the **reskin** pill (bottom right):
   The badge counts distinct places in code.
 - **Export**: shows `lib/app_theme.dart` with a Copy button, and calls `onExport(code)`.
 
-## Theme generation
+## Theme generation: AI first, offline fallback
 
-| Provider | Key | Notes |
-|---|---|---|
-| `OfflineThemeProvider` (default) | none | Deterministic. Color words (40+), mood words (`ramadan`, `ocean`, `luxury`, `tech`…), the pattern **"X on Y"** (X accent, Y brand/background), `round` / `sharp` / `serif` / `mono`. Builds light + dark schemes with `ColorScheme.fromSeed` and Material 3 scheme variants. The same prompt always gives the same themes. |
-| `GeminiThemeProvider(apiKey: …)` | yours | One JSON call, the model only picks seed/accent/background, fonts and radius. |
-| `OpenAIThemeProvider(apiKey: …)` | yours | Chat Completions JSON mode, `baseUrl` for any compatible server. |
-| your own | | implement `ReskinThemeProvider.generate(ReskinPrompt)` |
+With a key, a real model designs the theme; without one (or when the call fails) the
+built-in offline generator does.
+
+```
+prompt ─▶ Gemini (default) / OpenAI ─▶ strict JSON validation ─▶ Material 3 schemes ─▶ WCAG AA fixes ─▶ applied
+              │ error · timeout · bad JSON · no key
+              └──────────────▶ offline generator ─▶ same schemes + checks   (panel badge: "offline")
+```
+
+**What the model returns.** One call asks for 4 variants as structured JSON (Gemini
+`responseSchema`, OpenAI strict `json_schema`):
+
+```json
+{"variants":[{"name":"Classic Espresso",
+  "light":{"primary":"#6F4E37","secondary":"#A07C5B","background":"#FDF7F0","surface":"#F8F0E8"},
+  "dark": {"primary":"#D9B89D","secondary":"#BFA287","background":"#2E241E","surface":"#3A2F29"},
+  "headingFont":"Cormorant Garamond","bodyFont":"Inter","radius":8}]}
+```
+
+The model reads meaning, not keywords, in any language: *"morning coffee colors"* and
+*«ألوان قهوة الصبح»* both give espresso browns on cream (Arabic prompts get Arabic variant
+names). Real results for five prompts are in [docs/LOG.md](docs/LOG.md).
+
+**What reskin does with it.**
+
+1. **Validates strictly** (`parseAiVariants`): every variant needs a name and a valid
+   `light.primary` hex; any other color that is present must be valid hex or the variant is
+   dropped; `radius` must be a number (clamped 0–32); fonts must look like family names and,
+   if you pass `fonts:`, be on your list (otherwise the app keeps its font). Nothing usable left
+   → `ReskinResponseException` → fallback.
+2. **Builds full schemes**: the model's primary, secondary, background (`surface`) and card
+   color (`surfaceContainerLow`) are used as given; every other Material 3 role comes from the
+   primary's tonal palette. A missing dark palette is derived.
+3. **Fixes contrast**: `primary`/`secondary` used as text or icons on the page must reach 3:1
+   (darkened or lightened, same hue), and every `on*` text pair must reach WCAG AA 4.5:1.
+   Neon cyan on white becomes a deeper cyan; it is never trusted as-is.
+4. **Falls back** to the offline generator on any HTTP error, network error, timeout
+   (20 s per call, 25 s overall), blocked/empty answer or failed validation. The panel badge
+   turns amber **offline** and a line says why (`API key rejected (401)`, `timed out after 20s`,
+   `bad answer: …`). `controller.usedFallback` / `fallbackReason` / `source` say the same in code.
+
+### Passing a key (debug only)
+
+Use **your own** key, on **debug runs only**:
+
+```bash
+flutter run --dart-define=RESKIN_GEMINI_KEY=$GEMINI_API_KEY     # Gemini (default)
+flutter run --dart-define=RESKIN_OPENAI_KEY=$OPENAI_API_KEY     # or OpenAI
+```
+
+`Reskin.builder()` picks it up by itself (`ReskinProviders.fromEnvironment()`): Gemini when
+`RESKIN_GEMINI_KEY` is set, else OpenAI, else offline. Optional: `RESKIN_GEMINI_MODEL`
+(default `gemini-flash-lite-latest`), `RESKIN_OPENAI_MODEL` (default `gpt-4o-mini`),
+`RESKIN_GEMINI_BASE_URL` / `RESKIN_OPENAI_BASE_URL` for your own proxy. Or build it yourself:
 
 ```dart
 Reskin.builder(
-  controller: ReskinController(
-    provider: GeminiThemeProvider(apiKey: const String.fromEnvironment('GEMINI_KEY')),
+  theme: lightTheme,
+  darkTheme: darkTheme,
+  provider: GeminiThemeProvider(
+    apiKey: const String.fromEnvironment('RESKIN_GEMINI_KEY'),
+    fonts: ['Inter', 'Manrope', 'El Messiri'], // only fonts your app has
   ),
 )
 ```
 
-A logo works too: `controller.generate(ReskinPrompt.image(AssetImage('assets/logo.png')))`
-(the seed comes from `ColorScheme.fromImageProvider`). If an AI provider fails, reskin falls
-back to the offline generator and shows the error in the panel.
+> **Never ship a key.** A `--dart-define` value is compiled into the binary, so never pass
+> one to `flutter build` for a release, never commit it, and keep it out of CI logs.
+> `ReskinProviders` returns the offline provider outside debug builds, and `Reskin.builder()`
+> is a no-op in release, but the key would still be inside a release binary if you defined it
+> there. For anything shared, put the key behind your own server and point `baseUrl` at it.
 
-Every scheme is checked against **WCAG AA (4.5:1)** for the on-color/background pairs
-(`onPrimary/primary`, `onSurface/surface`, containers, error…). Failing foregrounds are moved
-toward black or white until they pass, before the theme is applied.
+| Provider | Key | Notes |
+|---|---|---|
+| `GeminiThemeProvider` | yours | Default AI path. `gemini-flash-lite-latest` (about 2 s per call on a free AI Studio key), `responseSchema`, one retry on 429/503, `thinkingBudget: 512` on Flash models. Pass `model: 'gemini-flash-latest'` for richer palettes (5–8 s). `baseUrl` + `headers` for a proxy. |
+| `OpenAIThemeProvider` | yours | Chat Completions with strict `json_schema` (`structuredOutputs: false` for servers that only know JSON mode). `baseUrl` for any compatible server. |
+| `OfflineThemeProvider` | none | Fallback, and the default with no key. Deterministic: same prompt, same themes. |
+| your own | | implement `ReskinThemeProvider.generate(ReskinPrompt)` |
+
+### The offline fallback
+
+No network, no key, deterministic. It understands about 90 English color words, 60 mood
+words (`ramadan`, `coffee`, `morning`, `calm`, `medical`, `students`, `cyberpunk`, `luxury`…),
+**Arabic color and mood words** (ذهبي، كحلي، أخضر، زيتي، خمري، بني، بيج، رمضان، قهوة، الصبح، هادئ، طبي…,
+with ال/و/بـ prefixes, feminine forms and hamza/ة/ى spellings normalized), the pattern
+**"X on Y"** / **«X على Y»** (X accent, Y background), and `round` / `sharp` / `serif` / `mono`.
+Words it does not know still give a stable color derived from the text. It is a keyword
+dictionary, not a model: it will not understand a sentence it has no words for.
+
+A logo works too: `controller.generate(ReskinPrompt.image(AssetImage('assets/logo.png')))`
+(the seed comes from `ColorScheme.fromImageProvider`, the AI then designs around it).
 
 Fonts are family names. Bundle them, or pass `fontResolver: (family, base) => GoogleFonts.getTextTheme(family, base)`.
 
@@ -113,24 +188,34 @@ and `ext.reskin.exportTheme` as VM service extensions (debug only).
 ## Example
 
 `example/` is a small shop app (offers home, offer cards, profile) with **8 deliberately
-hardcoded colors**. `cd example && flutter run -d chrome`, then try `gold on navy`, Dark, X-ray.
+hardcoded colors**. `cd example && flutter run -d chrome --dart-define=RESKIN_GEMINI_KEY=$GEMINI_API_KEY`, then try
+`morning coffee colors`, `ألوان قهوة الصبح`, Dark, X-ray. Without the define it runs offline.
 
 ## Tests
 
 ```bash
 flutter analyze            # package + example: no issues
-flutter test               # 24 package tests (contrast, generator, providers, export, panel, X-ray)
+flutter test               # package tests: AI JSON validation + fallback, Arabic offline words, contrast, export, panel, X-ray
+flutter test tool/live_test.dart   # live: 5 prompts against your own key (skipped without RESKIN_GEMINI_KEY / RESKIN_OPENAI_KEY)
 cd example && flutter test # X-ray on the real example screen finds its hardcoded colors
 cd mcp && npm test         # 10 tests incl. a stdio MCP round-trip
 ```
 
-## Limitations (v0.1)
+## Limitations
 
-- Debug tool: the AI key lives in your app process. Read it from `--dart-define`, never commit it.
+- Debug tool: an AI key lives in your app process. Your own key, `--dart-define` on debug
+  runs only, never committed, never in a release build.
+- AI output varies run to run and is only as good as the model: it sometimes still picks web
+  named colors (`#FFD700`, `#191970`), keeps light pages for a "night" brief, or adds a stray
+  accent (a lavender in a coffee palette). Contrast is always fixed; taste is not. Swipe the
+  variants or ask again.
+- Fonts are chosen by name. Pass `fonts:` with the families your app actually has, or use a
+  `fontResolver`; reskin does not download fonts.
+- Tested live against Gemini 2.5 Flash (see docs/LOG.md). The OpenAI provider is covered by
+  unit tests against recorded response shapes, not yet by a live call.
 - X-ray inspects the widgets that are on screen now (scroll or navigate, then X-ray again).
 - The panel uses `MaterialApp.builder`; `CupertinoApp` is not supported yet.
 - The static scanner is a masked regex pass, not a Dart parser; role suggestions are heuristics.
-- Font pairing is by family name; reskin does not download fonts by itself.
 
 ## License
 

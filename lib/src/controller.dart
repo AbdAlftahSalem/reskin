@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import 'ai_providers.dart';
 import 'contrast.dart';
 import 'export.dart';
 import 'generator.dart';
@@ -9,11 +12,22 @@ import 'xray.dart';
 /// State behind the reskin panel. Drive it from code, tests, or the VM
 /// service extensions the MCP server calls.
 class ReskinController extends ChangeNotifier {
-  ReskinController({ReskinThemeProvider? provider})
-      : provider = provider ?? const OfflineThemeProvider();
+  ReskinController({
+    ReskinThemeProvider? provider,
+    this.fallback = const OfflineThemeProvider(),
+    this.timeout = const Duration(seconds: 25),
+  }) : provider = provider ?? const OfflineThemeProvider();
 
-  /// Where variants come from. Defaults to the offline generator.
+  /// Where variants come from first. Defaults to the offline generator;
+  /// pass a [GeminiThemeProvider] / [OpenAIThemeProvider] (or
+  /// [ReskinProviders.fromEnvironment]) to make AI the main path.
   ReskinThemeProvider provider;
+
+  /// Used when [provider] fails, times out or returns an unusable answer.
+  ReskinThemeProvider fallback;
+
+  /// Upper bound for one [provider] call before falling back.
+  Duration timeout;
 
   List<ReskinTheme> _variants = const <ReskinTheme>[];
   int _index = -1;
@@ -23,6 +37,8 @@ class ReskinController extends ChangeNotifier {
   bool _busy = false;
   bool _showExport = false;
   String? _error;
+  String? _fallbackReason;
+  String? _source;
   String _lastPrompt = '';
   List<XrayFinding> _findings = const <XrayFinding>[];
   int _xrayRuns = 0;
@@ -41,7 +57,23 @@ class ReskinController extends ChangeNotifier {
   bool get panelOpen => _panelOpen;
   bool get busy => _busy;
   bool get showExport => _showExport;
+
+  /// The full error of the last failed [provider] call, if any.
   String? get error => _error;
+
+  /// Short reason the last generation fell back to [fallback] (like
+  /// `timed out after 20s` or `API key rejected (401)`), or null.
+  String? get fallbackReason => _fallbackReason;
+
+  /// True when the shown variants came from [fallback], not [provider].
+  bool get usedFallback => _fallbackReason != null;
+
+  /// Name of the provider that produced the current variants (`gemini`,
+  /// `openai`, `offline`...), or null before the first generation.
+  String? get source => _source;
+
+  /// True when [provider] is not the offline generator.
+  bool get aiEnabled => provider is! OfflineThemeProvider;
   String get lastPrompt => _lastPrompt;
 
   /// Latest X-ray result (set by the host after each scan).
@@ -61,27 +93,37 @@ class ReskinController extends ChangeNotifier {
     return ensureReadable(c.scheme(brightness)).$2;
   }
 
-  /// Generates variants and applies the first one.
+  /// Generates variants and applies the first one. Tries [provider] first;
+  /// on any error or after [timeout] it uses [fallback] and records why in
+  /// [fallbackReason] (the panel shows an "offline" badge).
   Future<List<ReskinTheme>> generate(ReskinPrompt prompt) async {
     _busy = true;
     _error = null;
+    _fallbackReason = null;
     _lastPrompt = prompt.label;
     notifyListeners();
     try {
-      final v = await provider.generate(prompt);
+      List<ReskinTheme> v;
+      try {
+        v = await provider.generate(prompt).timeout(timeout);
+        if (v.isEmpty) {
+          throw const ReskinResponseException(
+              'The provider returned no themes.');
+        }
+        _source = provider.name;
+      } catch (e) {
+        if (identical(provider, fallback) || provider is OfflineThemeProvider) {
+          rethrow;
+        }
+        // Never leave the developer with nothing: fall back offline.
+        _error = '$e';
+        _fallbackReason = reskinFailureReason(e);
+        v = await fallback.generate(prompt);
+        _source = fallback.name;
+      }
       _variants = v;
       _index = v.isEmpty ? -1 : 0;
       return v;
-    } catch (e) {
-      _error = '$e';
-      if (provider is! OfflineThemeProvider) {
-        // Never leave the developer with nothing: fall back offline.
-        final v = await const OfflineThemeProvider().generate(prompt);
-        _variants = v;
-        _index = 0;
-        return v;
-      }
-      rethrow;
     } finally {
       _busy = false;
       _bumpXray();
