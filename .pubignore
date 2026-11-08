@@ -6,3 +6,4 @@ example/.dart_tool/
 build/
 example_showcase/build/
 example_showcase/.dart_tool/
+docs/media/

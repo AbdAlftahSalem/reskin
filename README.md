@@ -7,7 +7,16 @@ between variants. Flip to Dark, turn on X-ray, and every widget whose color igno
 theme is outlined in red with its `file:line`. Those are the colors that break dark mode.
 Then let an AI agent fix them through `reskin-mcp`, and export a clean `app_theme.dart`.
 
-<!-- Demo GIF / video goes here -->
+<p align="center">
+  <a href="docs/media/reskin_showcase.mp4"><img src="docs/media/reskin_preview.gif" width="320" alt="reskin on the Bunn coffee app: X-ray finds 7 hardcoded colors, reskin-mcp fix replaces them, hot reload shows 0 left"></a>
+  <br>
+  <a href="docs/media/reskin_showcase.mp4"><b>▶ Watch the full demo (74s)</b></a>
+</p>
+
+| AI theme from a prompt | X-ray: hardcoded colors | Dark mode, order screen |
+|---|---|---|
+| ![](docs/media/showcase_1_ai_theme.jpg) | ![](docs/media/showcase_2_xray.jpg) | ![](docs/media/showcase_3_dark_order.jpg) |
+
 | Restyle from a prompt | X-ray in dark mode | After the fix | Export |
 |---|---|---|---|
 | ![](docs/images/still_1_restyled.jpg) | ![](docs/images/still_2_xray.jpg) | ![](docs/images/still_3_fixed.jpg) | ![](docs/images/still_4_export.jpg) |
@@ -17,9 +26,9 @@ Then let an AI agent fix them through `reskin-mcp`, and export a clean `app_them
 
 **AI themes on the example app** (real Gemini answers, see [docs/LOG.md](docs/LOG.md)):
 
-| «Ramadan night, gold on navy» (dark) | «ألوان قهوة الصبح» | «cyberpunk neon» |
+| "Ramadan night, gold on navy" (dark) | "morning coffee colors" | "cyberpunk neon" |
 |---|---|---|
-| ![](docs/images/ai_ramadan_dark.jpg) | ![](docs/images/ai_arabic_coffee.jpg) | ![](docs/images/ai_cyberpunk.jpg) |
+| ![](docs/images/ai_ramadan_dark.jpg) | ![](docs/images/ai_morning_coffee.jpg) | ![](docs/images/ai_cyberpunk.jpg) |
 
 ## Quick start
 
@@ -71,9 +80,9 @@ prompt ─▶ Gemini (default) / OpenAI ─▶ strict JSON validation ─▶ Mat
   "headingFont":"Cormorant Garamond","bodyFont":"Inter","radius":8}]}
 ```
 
-The model reads meaning, not keywords, in any language: *"morning coffee colors"* and
-*«ألوان قهوة الصبح»* both give espresso browns on cream (Arabic prompts get Arabic variant
-names). Real results for five prompts are in [docs/LOG.md](docs/LOG.md).
+The model reads meaning, not keywords: *"morning coffee colors"* gives espresso browns on
+cream, with variants named "Classic Espresso", "Creamy Latte", "Morning Brew" and "Cozy Cafe".
+Prompts in other languages work too (an Arabic prompt gets Arabic variant names). Real results for five prompts are in [docs/LOG.md](docs/LOG.md).
 
 **What reskin does with it.**
 
@@ -135,9 +144,10 @@ Reskin.builder(
 
 No network, no key, deterministic. It understands about 90 English color words, 60 mood
 words (`ramadan`, `coffee`, `morning`, `calm`, `medical`, `students`, `cyberpunk`, `luxury`…),
-**Arabic color and mood words** (ذهبي، كحلي، أخضر، زيتي، خمري، بني، بيج، رمضان، قهوة، الصبح، هادئ، طبي…,
-with ال/و/بـ prefixes, feminine forms and hamza/ة/ى spellings normalized), the pattern
-**"X on Y"** / **«X على Y»** (X accent, Y background), and `round` / `sharp` / `serif` / `mono`.
+**Arabic color and mood words** too (gold, navy, green, olive, burgundy, brown, beige, Ramadan,
+coffee, morning, calm, medical…, with common prefixes, feminine forms and spelling variants
+normalized), the pattern **"X on Y"** (X accent, Y background; its Arabic form works as well),
+and `round` / `sharp` / `serif` / `mono`.
 Words it does not know still give a stable color derived from the text. It is a keyword
 dictionary, not a model: it will not understand a sentence it has no words for.
 
@@ -197,7 +207,7 @@ and `ext.reskin.exportTheme` as VM service extensions (debug only).
 
 `example/` is a small shop app (offers home, offer cards, profile) with **8 deliberately
 hardcoded colors**. `cd example && flutter run -d chrome --dart-define=RESKIN_GEMINI_KEY=$GEMINI_API_KEY`, then try
-`morning coffee colors`, `ألوان قهوة الصبح`, Dark, X-ray. Without the define it runs offline.
+`morning coffee colors`, `cyberpunk neon`, Dark, X-ray. Without the define it runs offline.
 
 `example_showcase/` is **Bunn**, a realistic coffee-ordering app (home with search, promo
 banner, chips and a product grid; product details; order/checkout; rewards; profile; Material 3
