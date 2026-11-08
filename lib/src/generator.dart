@@ -664,7 +664,11 @@ ReskinTheme buildTheme(
 }
 
 ReskinTheme _readable(ReskinTheme t) {
-  final (light, _) = ensureReadable(t.light);
-  final (dark, _) = ensureReadable(t.dark);
-  return t.copyWith(light: light, dark: dark);
+  final (light, lr) = ensureReadable(t.light);
+  final (dark, dr) = ensureReadable(t.dark);
+  return t.copyWith(
+      light: light,
+      dark: dark,
+      lightFixes: lr.adjustedCount,
+      darkFixes: dr.adjustedCount);
 }

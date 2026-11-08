@@ -146,6 +146,14 @@ A logo works too: `controller.generate(ReskinPrompt.image(AssetImage('assets/log
 
 Fonts are family names. Bundle them, or pass `fontResolver: (family, base) => GoogleFonts.getTextTheme(family, base)`.
 
+### Contrast (WCAG AA)
+
+Every generated scheme goes through `makeReadable()`: `primary`/`secondary` must reach 3:1 against
+the page, and every `on*` text color 4.5:1 against its background. Failing colors keep their hue
+and are moved toward black or white until they pass. The panel shows the result under the
+controls, for example `WCAG AA ✓ min 4.5:1 · 2 colors auto-fixed for readability`
+(`ReskinTheme.fixesFor(brightness)` has the count).
+
 ## How X-ray works
 
 1. reskin reads the explicit colors of supported widgets under the live theme.
@@ -191,6 +199,21 @@ and `ext.reskin.exportTheme` as VM service extensions (debug only).
 hardcoded colors**. `cd example && flutter run -d chrome --dart-define=RESKIN_GEMINI_KEY=$GEMINI_API_KEY`, then try
 `morning coffee colors`, `ألوان قهوة الصبح`, Dark, X-ray. Without the define it runs offline.
 
+`example_showcase/` is **Bunn**, a realistic coffee-ordering app (home with search, promo
+banner, chips and a product grid; product details; order/checkout; rewards; profile; Material 3
+bottom navigation). It is theme-driven except for **12 deliberate hardcoded colors** (7 on Home),
+the way a real codebase drifts:
+
+```bash
+cd example_showcase
+flutter run -d chrome --dart-define=RESKIN_GEMINI_KEY=$GEMINI_API_KEY
+flutter test                                     # X-ray finds the 7 Home sites
+node ../mcp/dist/src/index.js fix .              # replace them with ColorScheme roles
+flutter test --dart-define=RESKIN_EXPECT_SITES=0 # X-ray finds none
+```
+
+The product photos in `example_showcase/assets/images/` are AI-generated for this demo.
+
 ## Tests
 
 ```bash
@@ -200,6 +223,11 @@ flutter test tool/live_test.dart   # live: 5 prompts against your own key (skipp
 cd example && flutter test # X-ray on the real example screen finds its hardcoded colors
 cd mcp && npm test         # 10 tests incl. a stdio MCP round-trip
 ```
+
+Only what is on screen is checked: widgets in an inactive `IndexedStack` tab or a route
+under the current one are skipped (`XrayScanner(includeUnpainted: true)` includes them).
+If your app has its own bottom bar, `Reskin.builder(panelBottomOffset: 84)` keeps the
+reskin pill above it.
 
 ## Limitations
 

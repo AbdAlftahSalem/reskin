@@ -91,3 +91,23 @@ test('role heuristics', () => {
   assert.equal(suggestRole('color', ['Container'], 0xFFF2F3F5).role, 'surfaceContainerHighest');
   assert.equal(suggestRole('shadowColor', ['Card'], 0xFF000000).role, 'shadow');
 });
+
+test('colors inside a TextStyle copyWith are foreground colors', () => {
+  const src = `
+Widget build(BuildContext context) {
+  final text = Theme.of(context).textTheme;
+  return Column(children: [
+    Text('a', style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: Colors.white)),
+    Text('b', style: widget.style.copyWith(color: const Color(0xFF8A4B2A))),
+    Container(decoration: box.copyWith(color: const Color(0xFFFFF1D6))),
+  ]);
+}
+`;
+  const f = scanDartSource(src, 'lib/a.dart');
+  assert.equal(f.length, 3);
+  assert.equal(f[0].kind, 'foreground');
+  assert.equal(f[0].role, 'onPrimary');
+  assert.equal(f[1].kind, 'foreground');
+  assert.equal(f[1].role, 'primary');
+  assert.equal(f[2].kind, 'background');
+});

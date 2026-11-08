@@ -193,3 +193,19 @@ or endpoint of it is in the package or repo):
 
 **Tests**: `flutter analyze` clean (package + example); 52 package tests + 1 example test pass;
 MCP 10/10; `flutter pub publish --dry-run` 0 warnings (nothing published).
+
+
+## 2026-11-08 — showcase app + demo video
+
+- New `example_showcase/` (Bunn coffee app). Tested reskin on it on Flutter web (debug) with real
+  Gemini (`gemini-3.5-flash-lite` through the same test bridge as above): «ألوان قهوة الصبح» and
+  "lemon yellow on white, summer" answered in about 2–3 s each with 4 valid variants.
+- Bugs found and fixed while testing on a real multi-tab app:
+  - X-ray counted widgets in inactive `IndexedStack` tabs (Home showed 11 sites, 4 of them on
+    hidden tabs). Now only painted widgets are outlined and counted.
+  - `reskin-mcp` treated `text.titleLarge?.copyWith(color: Colors.white)` as a background and
+    suggested `surfaceContainerLowest`; it now suggests a text role (`onPrimary`).
+  - The pill/panel covered the app's own `NavigationBar`; new `panelBottomOffset`.
+- The WCAG AA result is now visible in the panel (count of auto-fixed colors).
+- `reskin-mcp fix` on the showcase: 12 replacements in 5 files, `flutter analyze` clean,
+  runtime X-ray on Home 7 → 0 after hot reload.

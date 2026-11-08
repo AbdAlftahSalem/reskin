@@ -200,10 +200,14 @@ class AiVariant {
     final d = dark != null
         ? schemeFromPalette(dark!, Brightness.dark)
         : _derivedDark(light);
+    final (lightScheme, lightFixes) = makeReadable(l);
+    final (darkScheme, darkFixes) = makeReadable(d);
     return ReskinTheme(
       name: name,
-      light: ensureReadable(ensureAccentsVisible(l).$1).$1,
-      dark: ensureReadable(ensureAccentsVisible(d).$1).$1,
+      light: lightScheme,
+      dark: darkScheme,
+      lightFixes: lightFixes,
+      darkFixes: darkFixes,
       headingFont: headingFont,
       bodyFont: bodyFont,
       radius: radius,

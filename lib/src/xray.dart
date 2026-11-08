@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderIndexedStack;
 
 /// One color a widget asked for, by the property it came from.
 typedef XrayColorSlot = (String property, Color color);
@@ -250,6 +251,7 @@ class XrayScanner {
   const XrayScanner({
     this.extraExtractors = const <XrayColorExtractor>[],
     this.includeFrameworkWidgets = false,
+    this.includeUnpainted = false,
   });
 
   /// Your own widget types, checked after the built-in ones.
@@ -259,6 +261,11 @@ class XrayScanner {
   /// (or other pub packages) are skipped so a Container's internal
   /// DecoratedBox is not reported twice. Set true to include them.
   final bool includeFrameworkWidgets;
+
+  /// Also report widgets that are mounted but not painted (inactive
+  /// IndexedStack children, routes below the current one). Off by default:
+  /// X-ray is about what is on screen.
+  final bool includeUnpainted;
 
   List<XrayColorSlot> _extract(Widget w) {
     final slots = defaultColorExtractor(w);
@@ -304,6 +311,10 @@ class XrayScanner {
         if (match.isEmpty) continue;
         if (match.first.$2 != colorA) continue;
         final rect = globalRectOf(element);
+        // Not painted: an inactive IndexedStack tab, a route under the
+        // current one, an Offstage subtree. Those are not on screen, so
+        // they are neither outlined nor counted.
+        if (rect == null && !includeUnpainted) continue;
         final key = '${rect?.toString()}|${colorA.toARGB32()}';
         // e.g. a Container and its own DecoratedBox: report once.
         if (rect != null && !seen.add(key)) continue;
@@ -324,6 +335,16 @@ class XrayScanner {
   }
 }
 
+bool _isShownChild(RenderIndexedStack stack, RenderObject child) {
+  final index = stack.index;
+  if (index == null) return false;
+  RenderBox? c = stack.firstChild;
+  for (var i = 0; i < index && c != null; i++) {
+    c = stack.childAfter(c);
+  }
+  return identical(c, child);
+}
+
 /// On-screen rect of [element]'s render box, or null when it is not painted
 /// (offstage route, scrolled out of a lazy list, not laid out yet).
 Rect? globalRectOf(Element element) {
@@ -334,6 +355,11 @@ Rect? globalRectOf(Element element) {
   var parent = ro.parent;
   while (parent != null) {
     if (!parent.paintsChild(child)) return null;
+    // RenderIndexedStack lays out every child but paints only the selected
+    // one, and does not say so through paintsChild.
+    if (parent is RenderIndexedStack && !_isShownChild(parent, child)) {
+      return null;
+    }
     child = parent;
     parent = parent.parent;
   }

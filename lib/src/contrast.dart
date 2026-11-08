@@ -163,3 +163,11 @@ Map<String, Color> _schemeMap(ColorScheme s) => <String, Color>{
       primary: fix(scheme.primary), secondary: fix(scheme.secondary));
   return (out, changed);
 }
+
+/// [ensureAccentsVisible] then [ensureReadable], with the total number of
+/// colors changed. This is what reskin runs on every generated scheme.
+(ColorScheme, int) makeReadable(ColorScheme scheme) {
+  final (a, accents) = ensureAccentsVisible(scheme);
+  final (b, report) = ensureReadable(a);
+  return (b, accents + report.adjustedCount);
+}

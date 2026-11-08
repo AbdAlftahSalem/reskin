@@ -158,6 +158,19 @@ export function suggestRole(property: string | null, enclosing: string[], argb: 
 
 interface Opener { name: string; index: number; constAt: number | null }
 
+const TEXT_STYLE_RECEIVER =
+  /(?:\bTextStyle\b[^;]*|\b(?:style|textStyle|labelStyle|(?:display|headline|title|body|label)(?:Large|Medium|Small)))\s*[?!]?\s*\.\s*$/;
+
+/**
+ * `x.copyWith(` is named after what it copies: `text.titleLarge?.copyWith(color: …)` and
+ * `style.copyWith(…)` copy a TextStyle, so their colors are text (foreground) colors.
+ * Anything else keeps the name `copyWith`.
+ */
+function copyWithReceiver(masked: string, parenIndex: number): string {
+  const before = masked.slice(Math.max(0, parenIndex - 120), parenIndex).replace(/copyWith\s*$/, '');
+  return TEXT_STYLE_RECEIVER.test(before) ? 'TextStyle' : 'copyWith';
+}
+
 /** Unclosed constructor calls before `pos`, innermost first. */
 function openers(masked: string, pos: number, limit = 4000): Opener[] {
   const out: Opener[] = [];
@@ -216,7 +229,9 @@ export function scanDartSource(src: string, file: string, opts: ScanOptions = {}
     const index = m.index;
     const text = src.slice(index, index + m[0].length);
     const ops = openers(masked, index);
-    const names = ops.map((o) => o.name).filter((n) => n.length > 0);
+    const names = ops
+      .map((o) => (/(^|\.)copyWith$/.test(o.name) ? copyWithReceiver(masked, o.index) : o.name))
+      .filter((n) => n.length > 0);
     if (!opts.includeThemeFiles && names.some((n) => /^(ColorScheme|ThemeData)/.test(n))) continue;
     const before = masked.slice(Math.max(0, index - 120), index);
     const pm = /([A-Za-z_]\w*)\s*:\s*(?:const\s+)?$/.exec(before);

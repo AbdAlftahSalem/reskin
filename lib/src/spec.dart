@@ -16,6 +16,8 @@ class ReskinTheme {
     this.radius = 12,
     this.source = 'offline',
     this.prompt,
+    this.lightFixes = 0,
+    this.darkFixes = 0,
   });
 
   /// Builds a theme from one seed color with Material 3's tonal palettes.
@@ -60,6 +62,17 @@ class ReskinTheme {
 
   /// The prompt this theme came from, if any.
   final String? prompt;
+
+  /// How many colors of [light] reskin changed to reach WCAG AA (text 4.5:1,
+  /// accents 3:1) when it built this theme. 0 when nothing needed fixing.
+  final int lightFixes;
+
+  /// Same as [lightFixes] for [dark].
+  final int darkFixes;
+
+  /// [lightFixes] or [darkFixes].
+  int fixesFor(Brightness brightness) =>
+      brightness == Brightness.dark ? darkFixes : lightFixes;
 
   ColorScheme scheme(Brightness brightness) =>
       brightness == Brightness.dark ? dark : light;
@@ -135,6 +148,8 @@ class ReskinTheme {
     double? radius,
     String? source,
     String? prompt,
+    int? lightFixes,
+    int? darkFixes,
   }) =>
       ReskinTheme(
         name: name ?? this.name,
@@ -145,6 +160,8 @@ class ReskinTheme {
         radius: radius ?? this.radius,
         source: source ?? this.source,
         prompt: prompt ?? this.prompt,
+        lightFixes: lightFixes ?? this.lightFixes,
+        darkFixes: darkFixes ?? this.darkFixes,
       );
 
   /// Compact JSON used by the VM service extensions and the MCP server.

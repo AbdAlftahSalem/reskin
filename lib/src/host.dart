@@ -9,6 +9,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'ai_providers.dart';
+import 'contrast.dart';
 import 'controller.dart';
 import 'generator.dart';
 import 'spec.dart';
@@ -39,6 +40,7 @@ abstract final class Reskin {
     XrayScanner scanner = const XrayScanner(),
     bool registerServiceExtensions = true,
     bool initiallyOpen = false,
+    double panelBottomOffset = 0,
   }) {
     return (BuildContext context, Widget? child) {
       final inner = builder != null ? builder(context, child) : child!;
@@ -53,6 +55,7 @@ abstract final class Reskin {
         scanner: scanner,
         registerServiceExtensions: registerServiceExtensions,
         initiallyOpen: initiallyOpen,
+        panelBottomOffset: panelBottomOffset,
         child: inner,
       );
     };
@@ -84,6 +87,7 @@ class ReskinHost extends StatefulWidget {
     this.scanner = const XrayScanner(),
     this.registerServiceExtensions = true,
     this.initiallyOpen = false,
+    this.panelBottomOffset = 0,
   });
 
   final Widget child;
@@ -105,6 +109,11 @@ class ReskinHost extends StatefulWidget {
   final XrayScanner scanner;
   final bool registerServiceExtensions;
   final bool initiallyOpen;
+
+  /// Extra space between the bottom of the screen and the reskin pill/panel,
+  /// so they float above your own bottom bar instead of covering it (for
+  /// example 80 for a Material 3 [NavigationBar]).
+  final double panelBottomOffset;
 
   @override
   State<ReskinHost> createState() => ReskinHostState();
@@ -638,7 +647,7 @@ class _PanelLayer extends StatelessWidget {
                 Positioned(
                   left: c.panelOpen ? 10 : null,
                   right: 10,
-                  bottom: 10 + pad.bottom,
+                  bottom: 10 + pad.bottom + host.widget.panelBottomOffset,
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 220),
                     child: c.panelOpen
@@ -946,6 +955,11 @@ class _PanelState extends State<_Panel> {
                   ),
                 ],
               ),
+              if (!c.busy && c.current != null)
+                _ContrastLine(
+                  report: c.contrastFor(brightness),
+                  fixes: c.current!.fixesFor(brightness),
+                ),
               if (c.busy)
                 Padding(
                   key: const Key('reskin-loading'),
@@ -982,6 +996,44 @@ class _PanelState extends State<_Panel> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// One line under the controls: the applied scheme's WCAG AA result and how
+/// many colors reskin changed to get there.
+class _ContrastLine extends StatelessWidget {
+  const _ContrastLine({required this.report, required this.fixes});
+
+  final ContrastReport? report;
+  final int fixes;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = report;
+    if (r == null) return const SizedBox.shrink();
+    final ok = r.passesAA;
+    final color = ok ? const Color(0xFF7BE0A5) : const Color(0xFFFFB4AB);
+    final worst = r.worstRatio.toStringAsFixed(1);
+    final fixed = fixes == 0
+        ? 'no fixes needed'
+        : '$fixes ${fixes == 1 ? 'color' : 'colors'} auto-fixed for readability';
+    return Padding(
+      key: const Key('reskin-contrast'),
+      padding: const EdgeInsets.only(top: 8, right: 4),
+      child: Row(children: <Widget>[
+        Icon(ok ? Icons.verified_outlined : Icons.error_outline,
+            size: 15, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            '${ok ? 'WCAG AA ✓' : 'Below AA'}  min $worst:1 · $fixed',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11.5, color: color),
+          ),
+        ),
+      ]),
     );
   }
 }

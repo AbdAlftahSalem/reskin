@@ -1,5 +1,20 @@
 ## 0.2.0 (unreleased)
 
+- **Visible WCAG check.** The panel shows the applied scheme's AA result, its lowest ratio and
+  how many colors reskin changed to get there ("WCAG AA ✓ min 4.5:1 · 2 colors auto-fixed for
+  readability"). New `ReskinTheme.lightFixes` / `darkFixes` / `fixesFor()` and
+  `makeReadable()` (accents 3:1 + text 4.5:1 in one call).
+- **X-ray fix:** widgets that are mounted but not painted (inactive `IndexedStack` tabs) are no
+  longer outlined or counted; `XrayScanner(includeUnpainted: true)` brings them back.
+  Found on the showcase app, where Home showed 11 sites instead of its 7.
+- **reskin-mcp fix:** a color inside `text.titleLarge?.copyWith(color: …)` /
+  `style.copyWith(…)` is now treated as a text color (it was suggested a background role,
+  e.g. `Colors.white` → `surfaceContainerLowest` instead of `onPrimary`).
+- `Reskin.builder(panelBottomOffset: …)` floats the pill and panel above your bottom bar.
+- New `example_showcase/`: "Bunn", a polished coffee-ordering app (home, details, order,
+  rewards, profile; AI-generated product photos) with 12 deliberate hardcoded colors, and a
+  widget test that X-rays Home (7 sites before `reskin-mcp fix`, 0 after).
+
 - **AI first.** With a key (`--dart-define=RESKIN_GEMINI_KEY` / `RESKIN_OPENAI_KEY`, read by
   `ReskinProviders.fromEnvironment()`, the new default of `Reskin.builder`), Gemini designs
   4 variants with light + dark palettes (primary, secondary, background, surface), a font

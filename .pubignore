@@ -4,3 +4,5 @@ example/build/
 example/.dart_tool/
 .dart_tool/
 build/
+example_showcase/build/
+example_showcase/.dart_tool/

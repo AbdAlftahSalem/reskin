@@ -56,6 +56,30 @@ Widget _app(ReskinController c) => MaterialApp(
     );
 
 void main() {
+  _contrastTests();
+
+  testWidgets('X-ray skips inactive IndexedStack children', (tester) async {
+    final c = ReskinController();
+    await tester.pumpWidget(MaterialApp(
+      builder: Reskin.builder(
+          controller: c, enabled: true, registerServiceExtensions: false),
+      home: const _Tabs(),
+    ));
+    final host = tester.state<ReskinHostState>(find.byType(ReskinHost));
+    late List<XrayFinding> findings;
+    await tester.runAsync(() async {
+      final f = host.scanNow();
+      for (var i = 0; i < 20; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+        tester.binding.scheduleFrame();
+        await tester.pump();
+      }
+      findings = await f;
+    });
+    expect(findings.map((f) => f.colorLabel).toList(),
+        <String>['Color(0xFF112233)']);
+  });
+
   testWidgets('X-ray flags only colors that ignore the theme', (tester) async {
     final c = ReskinController();
     await tester.pumpWidget(_app(c));
@@ -103,5 +127,49 @@ void main() {
     expect(shortenPath('file:///a/b/example/lib/home/offer_card.dart'),
         'lib/home/offer_card.dart');
     expect(shortenPath('/x/y/z.dart'), 'y/z.dart');
+  });
+}
+
+class _Tabs extends StatelessWidget {
+  const _Tabs();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: IndexedStack(
+        index: 0,
+        children: <Widget>[
+          SizedBox(
+              width: 50,
+              height: 20,
+              child: ColoredBox(color: Color(0xFF112233))),
+          // Inactive tab: laid out but never painted.
+          SizedBox(
+              width: 50,
+              height: 20,
+              child: ColoredBox(color: Color(0xFF445566))),
+        ],
+      ),
+    );
+  }
+}
+
+void _contrastTests() {
+  test('makeReadable reports how many colors it changed', () {
+    final bad = ColorScheme.fromSeed(seedColor: const Color(0xFFFFEB3B))
+        .copyWith(
+            onPrimary: const Color(0xFFFFFFFF),
+            primary: const Color(0xFFFFF59D));
+    final (fixed, n) = makeReadable(bad);
+    expect(n, greaterThan(0));
+    expect(ensureReadable(fixed).$2.passesAA, isTrue);
+    final theme = const AiVariant(
+      name: 'Lemon',
+      light:
+          AiPalette(primary: Color(0xFFFFF176), secondary: Color(0xFFFFEE58)),
+    ).toTheme();
+    expect(theme.lightFixes, greaterThan(0));
+    expect(theme.fixesFor(Brightness.light), theme.lightFixes);
+    expect(theme.copyWith(name: 'x').lightFixes, theme.lightFixes);
   });
 }
