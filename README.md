@@ -13,7 +13,7 @@ Then let an AI agent fix them through `reskin-mcp`, and export a clean `app_them
   <a href="docs/media/reskin_showcase.mp4"><b>▶ Watch the full demo (74s)</b></a>
 </p>
 
-| Restyle from a prompt | X-ray in dark mode | After the fix | Export |
+| "morning coffee colors" (live Gemini) | X-ray: 7 hardcoded colors | After `reskin-mcp fix`: 0 | Export |
 |---|---|---|---|
 | ![](docs/images/still_1_restyled.jpg) | ![](docs/images/still_2_xray.jpg) | ![](docs/images/still_3_fixed.jpg) | ![](docs/images/still_4_export.jpg) |
 

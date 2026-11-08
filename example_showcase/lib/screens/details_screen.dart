@@ -73,9 +73,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                             Text(d.name,
                                 style: text.headlineSmall
                                     ?.copyWith(fontWeight: FontWeight.w800)),
-                            Text(d.arabic,
-                                style: text.titleMedium?.copyWith(
-                                    fontFamily: 'El Messiri',
+                            Text(d.origin,
+                                style: text.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
                                     color: cs.onSurfaceVariant)),
                           ],
                         ),

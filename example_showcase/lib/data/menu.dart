@@ -3,7 +3,7 @@ class Drink {
   const Drink({
     required this.id,
     required this.name,
-    required this.arabic,
+    required this.origin,
     required this.subtitle,
     required this.price,
     required this.image,
@@ -16,7 +16,8 @@ class Drink {
 
   final String id;
   final String name;
-  final String arabic;
+  /// Origin and tasting line shown under the name on the details screen.
+  final String origin;
   final String subtitle;
   final double price;
   final String image;
@@ -39,7 +40,7 @@ const List<Drink> menu = <Drink>[
   Drink(
     id: 'flat-white',
     name: 'Flat White',
-    arabic: 'فلات وايت',
+    origin: 'Ethiopia Guji · stone fruit & cocoa',
     subtitle: 'Double ristretto · silky milk',
     price: 4.20,
     image: 'assets/images/latte.jpg',
@@ -53,7 +54,7 @@ const List<Drink> menu = <Drink>[
   Drink(
     id: 'spanish-latte',
     name: 'Iced Spanish Latte',
-    arabic: 'سبانش لاتيه مثلج',
+    origin: 'Brazil Cerrado · caramel sweet',
     subtitle: 'Condensed milk · espresso',
     price: 5.10,
     image: 'assets/images/iced.jpg',
@@ -68,7 +69,7 @@ const List<Drink> menu = <Drink>[
   Drink(
     id: 'arabic-coffee',
     name: 'Saudi Qahwa',
-    arabic: 'قهوة عربية',
+    origin: 'Yemeni beans · light roast',
     subtitle: 'Cardamom · saffron · dates',
     price: 3.50,
     image: 'assets/images/cardamom.jpg',
@@ -82,7 +83,7 @@ const List<Drink> menu = <Drink>[
   Drink(
     id: 'cortado',
     name: 'Cortado',
-    arabic: 'كورتادو',
+    origin: 'House blend · bold & balanced',
     subtitle: 'Equal espresso & milk',
     price: 3.80,
     image: 'assets/images/cortado.jpg',
@@ -96,7 +97,7 @@ const List<Drink> menu = <Drink>[
   Drink(
     id: 'cold-brew',
     name: 'Orange Cold Brew',
-    arabic: 'كولد برو برتقال',
+    origin: 'Colombia Huila · bright citrus',
     subtitle: '18-hour steep · citrus',
     price: 4.90,
     image: 'assets/images/coldbrew.jpg',
@@ -111,7 +112,7 @@ const List<Drink> menu = <Drink>[
   Drink(
     id: 'croissant',
     name: 'Butter Croissant',
-    arabic: 'كرواسون بالزبدة',
+    origin: 'French butter · baked at 6 am',
     subtitle: 'Baked every morning',
     price: 2.90,
     image: 'assets/images/croissant.jpg',

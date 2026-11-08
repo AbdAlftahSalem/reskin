@@ -10,6 +10,10 @@
 - **reskin-mcp fix:** a color inside `text.titleLarge?.copyWith(color: …)` /
   `style.copyWith(…)` is now treated as a text color (it was suggested a background role,
   e.g. `Colors.white` → `surfaceContainerLowest` instead of `onPrimary`).
+- **Showcase app in English.** Bunn (`example_showcase/`) has no Arabic UI text left: English greeting, an
+  origin/tasting line instead of the Arabic product names, an English profile toggle. The demo
+  video, README GIF and stills were re-recorded with the English prompt "morning coffee colors".
+  The 12 deliberate hardcoded colors (7 on Home) are unchanged.
 - `Reskin.builder(panelBottomOffset: …)` floats the pill and panel above your bottom bar.
 - New `example_showcase/`: "Bunn", a polished coffee-ordering app (home, details, order,
   rewards, profile; AI-generated product photos) with 12 deliberate hardcoded colors, and a

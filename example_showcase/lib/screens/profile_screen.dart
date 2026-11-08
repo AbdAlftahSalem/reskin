@@ -9,7 +9,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _notify = true;
-  bool _arabic = false;
+  bool _oatMilk = false;
 
   @override
   Widget build(BuildContext context) {
@@ -71,10 +71,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onChanged: (v) => setState(() => _notify = v),
               ),
               SwitchListTile(
-                secondary: const Icon(Icons.translate),
-                title: const Text('العربية'),
-                value: _arabic,
-                onChanged: (v) => setState(() => _arabic = v),
+                secondary: const Icon(Icons.eco_outlined),
+                title: const Text('Oat milk by default'),
+                value: _oatMilk,
+                onChanged: (v) => setState(() => _oatMilk = v),
               ),
               const ListTile(
                 leading: Icon(Icons.credit_card),

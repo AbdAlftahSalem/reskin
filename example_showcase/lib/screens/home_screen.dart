@@ -51,10 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text('صباح الخير يا عبد ☀️',
+                        Text('Good morning, Abd ☀️',
                             style: text.titleMedium?.copyWith(
-                                fontFamily: 'El Messiri',
-                                fontWeight: FontWeight.w700)),
+                                fontWeight: FontWeight.w800)),
                         Row(children: <Widget>[
                           Icon(Icons.storefront_outlined,
                               size: 14, color: cs.onSurfaceVariant),
