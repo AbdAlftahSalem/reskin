@@ -8,32 +8,39 @@ theme is outlined in red with its `file:line`. Those are the colors that break d
 Then let an AI agent fix them through `reskin-mcp`, and export a clean `app_theme.dart`.
 
 <p align="center">
-  <a href="docs/media/reskin_showcase.mp4"><img src="docs/media/reskin_preview.gif" width="320" alt="reskin on the Bunn coffee app: an AI theme from a prompt, X-ray on hardcoded colors, then reskin-mcp fix"></a>
+  <a href="https://github.com/AbdAlftahSalem/reskin/blob/main/docs/media/reskin_showcase.mp4"><img src="https://raw.githubusercontent.com/AbdAlftahSalem/reskin/main/docs/media/reskin_preview.gif" width="320" alt="reskin on the Bunn coffee app: an AI theme from a prompt, X-ray on hardcoded colors, then reskin-mcp fix"></a>
   <br>
-  <a href="docs/media/reskin_showcase.mp4"><b>▶ Watch the full demo (74s)</b></a>
+  <a href="https://github.com/AbdAlftahSalem/reskin/blob/main/docs/media/reskin_showcase.mp4"><b>▶ Watch the full demo (74s)</b></a>
 </p>
 
 | "morning coffee colors" (live Gemini) | X-ray: 7 hardcoded colors | After `reskin-mcp fix`: 0 | Export |
 |---|---|---|---|
-| ![](docs/images/still_1_restyled.jpg) | ![](docs/images/still_2_xray.jpg) | ![](docs/images/still_3_fixed.jpg) | ![](docs/images/still_4_export.jpg) |
+| ![still 1 restyled](https://raw.githubusercontent.com/AbdAlftahSalem/reskin/main/docs/images/still_1_restyled.jpg) | ![still 2 xray](https://raw.githubusercontent.com/AbdAlftahSalem/reskin/main/docs/images/still_2_xray.jpg) | ![still 3 fixed](https://raw.githubusercontent.com/AbdAlftahSalem/reskin/main/docs/images/still_3_fixed.jpg) | ![still 4 export](https://raw.githubusercontent.com/AbdAlftahSalem/reskin/main/docs/images/still_4_export.jpg) |
 
 > Debug-only dev tool. In release/profile builds `Reskin.builder()` returns your app
 > untouched.
 
-**AI themes on the example app** (real Gemini answers, see [docs/LOG.md](docs/LOG.md)):
+**AI themes on the example app** (real Gemini answers, see [docs/LOG.md](https://github.com/AbdAlftahSalem/reskin/blob/main/docs/LOG.md)):
 
 | "Ramadan night, gold on navy" (dark) | "morning coffee colors" | "cyberpunk neon" |
 |---|---|---|
-| ![](docs/images/ai_ramadan_dark.jpg) | ![](docs/images/ai_morning_coffee.jpg) | ![](docs/images/ai_cyberpunk.jpg) |
+| ![ai ramadan dark](https://raw.githubusercontent.com/AbdAlftahSalem/reskin/main/docs/images/ai_ramadan_dark.jpg) | ![ai morning coffee](https://raw.githubusercontent.com/AbdAlftahSalem/reskin/main/docs/images/ai_morning_coffee.jpg) | ![ai cyberpunk](https://raw.githubusercontent.com/AbdAlftahSalem/reskin/main/docs/images/ai_cyberpunk.jpg) |
 
 ## Quick start
 
-```yaml
-# pubspec.yaml
-dependencies:
-  reskin:
-    git: https://github.com/AbdAlftahSalem/reskin.git
+```bash
+flutter pub add reskin
 ```
+
+or in `pubspec.yaml`:
+
+```yaml
+dependencies:
+  reskin: ^0.2.0
+```
+
+It goes in `dependencies` (not `dev_dependencies`) because `lib/main.dart` imports it.
+In release and profile builds it does nothing.
 
 ```dart
 import 'package:reskin/reskin.dart';
@@ -78,7 +85,7 @@ prompt ─▶ Gemini (default) / OpenAI ─▶ strict JSON validation ─▶ Mat
 
 The model reads meaning, not keywords: *"morning coffee colors"* gives espresso browns on
 cream, with variants named "Classic Espresso", "Creamy Latte", "Morning Brew" and "Cozy Cafe".
-Prompts in other languages work too (an Arabic prompt gets Arabic variant names). Real results for five prompts are in [docs/LOG.md](docs/LOG.md).
+Prompts in other languages work too (an Arabic prompt gets Arabic variant names). Real results for five prompts are in [docs/LOG.md](https://github.com/AbdAlftahSalem/reskin/blob/main/docs/LOG.md).
 
 **What reskin does with it.**
 
@@ -147,8 +154,17 @@ and `round` / `sharp` / `serif` / `mono`.
 Words it does not know still give a stable color derived from the text. It is a keyword
 dictionary, not a model: it will not understand a sentence it has no words for.
 
-A logo works too: `controller.generate(ReskinPrompt.image(AssetImage('assets/logo.png')))`
-(the seed comes from `ColorScheme.fromImageProvider`, the AI then designs around it).
+A logo works too. Generate from code with the host's controller:
+
+```dart
+final controller = Reskin.maybeOf(context); // null outside debug builds
+await controller?.generate(
+  const ReskinPrompt.image(AssetImage('assets/logo.png')),
+);
+```
+
+The seed comes from `ColorScheme.fromImageProvider`, and the AI designs around it.
+`ReskinPrompt.seed(Color(0xFF00897B))` starts from a color instead.
 
 Fonts are family names. Bundle them, or pass `fontResolver: (family, base) => GoogleFonts.getTextTheme(family, base)`.
 
@@ -187,9 +203,9 @@ not follow a rebrand.
 
 ## reskin-mcp: let the agent fix the red ones
 
-`mcp/` is a small Node/TypeScript MCP server with three tools: `xray` (static scan of
+[`mcp/`](https://github.com/AbdAlftahSalem/reskin/tree/main/mcp) is a small Node/TypeScript MCP server with three tools: `xray` (static scan of
 `lib/`, with a suggested `Theme.of(context).colorScheme.<role>` per hit), `apply_theme` and
-`export_theme` (through the app's VM service). See [mcp/README.md](mcp/README.md).
+`export_theme` (through the app's VM service). It lives in the repository (not on npm); see [mcp/README.md](https://github.com/AbdAlftahSalem/reskin/blob/main/mcp/README.md).
 
 ```
 lib/home/offer_card.dart:19:16  Colors.white  →  Theme.of(context).colorScheme.surfaceContainerLowest
@@ -205,7 +221,7 @@ and `ext.reskin.exportTheme` as VM service extensions (debug only).
 hardcoded colors**. `cd example && flutter run -d chrome --dart-define=RESKIN_GEMINI_KEY=$GEMINI_API_KEY`, then try
 `morning coffee colors`, `cyberpunk neon`, Dark, X-ray. Without the define it runs offline.
 
-`example_showcase/` is **Bunn**, a realistic coffee-ordering app (home with search, promo
+[`example_showcase/`](https://github.com/AbdAlftahSalem/reskin/tree/main/example_showcase) (in the GitHub repository, not in the pub package) is **Bunn**, a realistic coffee-ordering app (home with search, promo
 banner, chips and a product grid; product details; order/checkout; rewards; profile; Material 3
 bottom navigation). It is theme-driven except for **12 deliberate hardcoded colors** (7 on Home),
 the way a real codebase drifts:
@@ -214,6 +230,7 @@ the way a real codebase drifts:
 cd example_showcase
 flutter run -d chrome --dart-define=RESKIN_GEMINI_KEY=$GEMINI_API_KEY
 flutter test                                     # X-ray finds the 7 Home sites
+(cd ../mcp && npm install && npm run build)
 node ../mcp/dist/src/index.js fix .              # replace them with ColorScheme roles
 flutter test --dart-define=RESKIN_EXPECT_SITES=0 # X-ray finds none
 ```
@@ -245,8 +262,9 @@ reskin pill above it.
   variants or ask again.
 - Fonts are chosen by name. Pass `fonts:` with the families your app actually has, or use a
   `fontResolver`; reskin does not download fonts.
-- Tested live against Gemini 2.5 Flash (see docs/LOG.md). The OpenAI provider is covered by
-  unit tests against recorded response shapes, not yet by a live call.
+- Tested live against Gemini: the default `gemini-flash-lite-latest` on an AI Studio key, and
+  Gemini 2.5 Flash / 3.5 Flash-Lite (see [docs/LOG.md](https://github.com/AbdAlftahSalem/reskin/blob/main/docs/LOG.md)). The OpenAI provider
+  is covered by unit tests against recorded response shapes, not yet by a live call.
 - X-ray inspects the widgets that are on screen now (scroll or navigate, then X-ray again).
 - The panel uses `MaterialApp.builder`; `CupertinoApp` is not supported yet.
 - The static scanner is a masked regex pass, not a Dart parser; role suggestions are heuristics.

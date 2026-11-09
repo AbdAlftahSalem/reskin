@@ -1,9 +1,18 @@
-docs/
-mcp/
-example/build/
-example/.dart_tool/
+# When this file exists, pub ignores the root .gitignore, so its rules are repeated here.
 .dart_tool/
 build/
-example_showcase/build/
-example_showcase/.dart_tool/
-docs/media/
+.packages
+pubspec.lock
+*.iml
+.idea/
+.vscode/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Repo-only: demo media, build log, the Node MCP server and the second demo app.
+# The README links to them on GitHub.
+docs/
+mcp/
+example_showcase/
+example/build/
+example/.dart_tool/

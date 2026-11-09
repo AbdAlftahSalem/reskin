@@ -1,10 +1,16 @@
 name: reskin
 description: >-
-  Debug-only dev tool: re-theme your running Flutter app from a prompt, seed
+  Debug-only Flutter dev tool: re-theme your running app from a prompt, seed
   color or logo, and X-ray every widget that uses a hardcoded color.
 version: 0.2.0
 repository: https://github.com/AbdAlftahSalem/reskin
-publish_to: none # private while in development
+issue_tracker: https://github.com/AbdAlftahSalem/reskin/issues
+topics:
+  - theme
+  - color
+  - dark-mode
+  - material-design
+  - devtools
 
 environment:
   sdk: ^3.6.0

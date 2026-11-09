@@ -1,4 +1,4 @@
-## 0.2.0 (unreleased)
+## 0.2.0
 
 - **Visible WCAG check.** The panel shows the applied scheme's AA result, its lowest ratio and
   how many colors reskin changed to get there ("WCAG AA ✓ min 4.5:1 · 2 colors auto-fixed for
@@ -38,7 +38,9 @@
   normalization, «X على Y».
 - `tool/live_test.dart`: live run of five prompts against your own key.
 
-## 0.1.0 (unreleased)
+## 0.1.0
+
+Not published; first internal version.
 
 - `Reskin.builder()` for `MaterialApp.builder`: live theme override, floating panel
   (prompt, variant carousel, Light/Dark, X-ray, Export). Debug-only by default.
